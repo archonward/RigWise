@@ -1,7 +1,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import sqlite3 from 'sqlite3';
-import type { NewPart, Part } from './types/part';
+import { seedParts } from './data/seedParts';
+import type { Part } from './types/part';
 
 const dataDirectory = path.resolve(__dirname, '../data');
 const databasePath = path.join(dataDirectory, 'rigwise.db');
@@ -20,165 +21,6 @@ const db = new sqlite3.Database(databasePath, (error) => {
 
   console.log(`SQLite connected at ${databasePath}`);
 });
-
-const sampleParts: NewPart[] = [
-  {
-    name: 'AMD Ryzen 5 5600',
-    brand: 'AMD',
-    category: 'CPU',
-    price: 130,
-    performanceScore: 70,
-    powerDraw: 65,
-    socket: 'AM4',
-    chipset: null,
-    memoryType: 'DDR4',
-    notes: 'Good value AM4 gaming CPU',
-  },
-  {
-    name: 'AMD Ryzen 7 5700X',
-    brand: 'AMD',
-    category: 'CPU',
-    price: 180,
-    performanceScore: 79,
-    powerDraw: 65,
-    socket: 'AM4',
-    chipset: null,
-    memoryType: 'DDR4',
-    notes: 'Strong 8-core AM4 upgrade option',
-  },
-  {
-    name: 'Intel Core i5-12400F',
-    brand: 'Intel',
-    category: 'CPU',
-    price: 145,
-    performanceScore: 72,
-    powerDraw: 65,
-    socket: 'LGA1700',
-    chipset: null,
-    memoryType: 'DDR4',
-    notes: 'Popular mid-range CPU for budget gaming builds',
-  },
-  {
-    name: 'NVIDIA GeForce RTX 4060',
-    brand: 'NVIDIA',
-    category: 'GPU',
-    price: 299,
-    performanceScore: 76,
-    powerDraw: 115,
-    socket: null,
-    chipset: null,
-    memoryType: 'GDDR6',
-    notes: 'Efficient 1080p card with DLSS support',
-  },
-  {
-    name: 'NVIDIA GeForce RTX 4070',
-    brand: 'NVIDIA',
-    category: 'GPU',
-    price: 549,
-    performanceScore: 88,
-    powerDraw: 200,
-    socket: null,
-    chipset: null,
-    memoryType: 'GDDR6X',
-    notes: 'Strong 1440p performer with good efficiency',
-  },
-  {
-    name: 'AMD Radeon RX 7600',
-    brand: 'AMD',
-    category: 'GPU',
-    price: 269,
-    performanceScore: 73,
-    powerDraw: 165,
-    socket: null,
-    chipset: null,
-    memoryType: 'GDDR6',
-    notes: 'Good value rasterized performance for 1080p gaming',
-  },
-  {
-    name: 'AMD Radeon RX 7800 XT',
-    brand: 'AMD',
-    category: 'GPU',
-    price: 499,
-    performanceScore: 90,
-    powerDraw: 263,
-    socket: null,
-    chipset: null,
-    memoryType: 'GDDR6',
-    notes: 'High-value 1440p GPU with strong VRAM capacity',
-  },
-  {
-    name: 'Corsair Vengeance 16GB DDR4',
-    brand: 'Corsair',
-    category: 'RAM',
-    price: 45,
-    performanceScore: 58,
-    powerDraw: null,
-    socket: null,
-    chipset: null,
-    memoryType: 'DDR4',
-    notes: 'Affordable 2x8GB kit for mainstream builds',
-  },
-  {
-    name: 'Kingston Fury Beast 32GB DDR5',
-    brand: 'Kingston',
-    category: 'RAM',
-    price: 115,
-    performanceScore: 75,
-    powerDraw: null,
-    socket: null,
-    chipset: null,
-    memoryType: 'DDR5',
-    notes: 'Good capacity upgrade for modern DDR5 platforms',
-  },
-  {
-    name: 'MSI MAG B550 Tomahawk',
-    brand: 'MSI',
-    category: 'Motherboard',
-    price: 170,
-    performanceScore: 68,
-    powerDraw: null,
-    socket: 'AM4',
-    chipset: 'B550',
-    memoryType: 'DDR4',
-    notes: 'Reliable AM4 board with solid VRM design',
-  },
-  {
-    name: 'ASUS Prime B760M-A',
-    brand: 'ASUS',
-    category: 'Motherboard',
-    price: 155,
-    performanceScore: 69,
-    powerDraw: null,
-    socket: 'LGA1700',
-    chipset: 'B760',
-    memoryType: 'DDR5',
-    notes: 'Compact Intel board for current mainstream systems',
-  },
-  {
-    name: 'Samsung 980 1TB NVMe SSD',
-    brand: 'Samsung',
-    category: 'Storage',
-    price: 79,
-    performanceScore: 74,
-    powerDraw: 5,
-    socket: null,
-    chipset: null,
-    memoryType: null,
-    notes: 'Fast PCIe NVMe storage for OS and game library',
-  },
-  {
-    name: 'Corsair RM750e PSU',
-    brand: 'Corsair',
-    category: 'PSU',
-    price: 99,
-    performanceScore: 80,
-    powerDraw: 750,
-    socket: null,
-    chipset: null,
-    memoryType: null,
-    notes: 'Efficient 750W unit for mid to upper-range GPUs',
-  },
-];
 
 function runQuery(sql: string, params: Array<string | number | null> = []) {
   return new Promise<void>((resolve, reject) => {
@@ -263,7 +105,7 @@ async function seedPartsTable() {
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
 
-  for (const part of sampleParts) {
+  for (const part of seedParts) {
     await runQuery(insertSql, [
       part.name,
       part.brand,
@@ -278,7 +120,7 @@ async function seedPartsTable() {
     ]);
   }
 
-  console.log(`Inserted ${sampleParts.length} sample parts into SQLite.`);
+  console.log(`Inserted ${seedParts.length} sample parts into SQLite.`);
 }
 
 export async function initializeDatabase() {
@@ -301,9 +143,27 @@ export async function getParts(options: GetPartsOptions = {}) {
   }
 
   if (options.search) {
-    conditions.push('(LOWER(name) LIKE LOWER(?) OR LOWER(brand) LIKE LOWER(?))');
+    conditions.push(`
+      (
+        LOWER(name) LIKE LOWER(?)
+        OR LOWER(brand) LIKE LOWER(?)
+        OR LOWER(category) LIKE LOWER(?)
+        OR LOWER(COALESCE(memoryType, '')) LIKE LOWER(?)
+        OR LOWER(COALESCE(socket, '')) LIKE LOWER(?)
+        OR LOWER(COALESCE(chipset, '')) LIKE LOWER(?)
+        OR LOWER(COALESCE(notes, '')) LIKE LOWER(?)
+      )
+    `);
     const searchTerm = `%${options.search}%`;
-    params.push(searchTerm, searchTerm);
+    params.push(
+      searchTerm,
+      searchTerm,
+      searchTerm,
+      searchTerm,
+      searchTerm,
+      searchTerm,
+      searchTerm,
+    );
   }
 
   let sql = 'SELECT * FROM parts';

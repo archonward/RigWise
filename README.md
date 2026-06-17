@@ -50,6 +50,7 @@ npm run build
 ## Backend Setup
 
 The backend lives in `backend/` and uses Express, TypeScript, and SQLite.
+RigWise currently uses seeded sample PC part data for local development and testing. Prices, scores, and notes are realistic placeholders rather than live market data.
 
 ### Install dependencies
 
@@ -66,6 +67,17 @@ npm run dev
 
 The backend starts on `http://localhost:3001` by default.
 On first startup, it creates `backend/data/rigwise.db`, creates the `parts` table if needed, and inserts sample parts when the table is empty.
+
+### Reset and reseed the database
+
+If you want to rebuild the local parts catalogue from the current seed data:
+
+```bash
+npm run reset-db
+npm run dev
+```
+
+`reset-db` deletes `backend/data/rigwise.db` if it exists. The next backend start recreates the database and reseeds the `parts` table automatically.
 
 ### Build the backend
 
@@ -98,7 +110,7 @@ Response:
 
 `GET /api/parts`
 
-Returns all sample parts from the local SQLite database.
+Returns all seeded sample parts from the local SQLite database.
 
 ### Filter by category
 
@@ -112,7 +124,11 @@ Returns only parts in the `GPU` category.
 
 `GET /api/parts?search=nvidia`
 
-Search is case-insensitive and matches against `name` and `brand`.
+`GET /api/parts?search=ddr5`
+
+`GET /api/parts?search=7800x3d`
+
+Search is case-insensitive and matches against fields such as `name`, `brand`, `category`, `memoryType`, `socket`, `chipset`, and `notes`.
 
 ### Combine category and search
 
@@ -144,8 +160,13 @@ Once the backend is running, test these URLs:
 
 - `http://localhost:3001/health`
 - `http://localhost:3001/api/parts`
+- `http://localhost:3001/api/parts?category=CPU`
 - `http://localhost:3001/api/parts?category=GPU`
+- `http://localhost:3001/api/parts?category=Motherboard`
+- `http://localhost:3001/api/parts?category=Storage`
 - `http://localhost:3001/api/parts?search=ryzen`
+- `http://localhost:3001/api/parts?search=ddr5`
+- `http://localhost:3001/api/parts?search=7800x3d`
 - `http://localhost:3001/api/parts?category=GPU&search=rtx`
 
 ## Notes

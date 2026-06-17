@@ -1,3 +1,5 @@
+import PartsBrowser from './components/PartsBrowser';
+
 function App() {
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
@@ -17,14 +19,16 @@ function App() {
             current build, your budget, and what you actually want to do with
             your machine.
           </p>
-          <button
-            type="button"
+          <a
+            href="#parts-browser"
             className="mt-10 inline-flex items-center rounded-md bg-cyan-400 px-5 py-3 text-base font-semibold text-slate-950 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2 focus:ring-offset-slate-950"
           >
             Start Planning
-          </button>
+          </a>
         </div>
       </section>
+
+      <PartsBrowser />
     </main>
   );
 }

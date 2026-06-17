@@ -1,1 +1,1 @@
-{"root":["./src/app.tsx","./src/main.tsx","./src/components/partsbrowser.tsx","./src/types/part.ts"],"version":"5.9.3"}
+{"root":["./src/app.tsx","./src/main.tsx","./src/components/partsbrowser.tsx","./src/components/upgradeplanner.tsx","./src/types/part.ts","./src/types/recommendation.ts"],"version":"5.9.3"}

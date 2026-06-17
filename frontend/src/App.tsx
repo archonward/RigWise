@@ -1,3 +1,4 @@
+import UpgradePlanner from './components/UpgradePlanner';
 import PartsBrowser from './components/PartsBrowser';
 
 function App() {
@@ -20,7 +21,7 @@ function App() {
             your machine.
           </p>
           <a
-            href="#parts-browser"
+            href="#upgrade-planner"
             className="mt-10 inline-flex items-center rounded-md bg-cyan-400 px-5 py-3 text-base font-semibold text-slate-950 transition hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2 focus:ring-offset-slate-950"
           >
             Start Planning
@@ -28,6 +29,7 @@ function App() {
         </div>
       </section>
 
+      <UpgradePlanner />
       <PartsBrowser />
     </main>
   );

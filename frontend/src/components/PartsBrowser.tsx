@@ -38,8 +38,8 @@ function PartsBrowser() {
 
         const queryString = params.toString();
         const url = queryString
-          ? `http://localhost:3000/api/parts?${queryString}`
-          : 'http://localhost:3000/api/parts';
+          ? `http://localhost:3001/api/parts?${queryString}`
+          : 'http://localhost:3001/api/parts';
 
         const response = await fetch(url);
 
@@ -52,7 +52,7 @@ function PartsBrowser() {
       } catch (error) {
         console.error(error);
         setErrorMessage(
-          'Could not load PC parts. Make sure the backend is running on http://localhost:3000.',
+          'Could not load PC parts. Make sure the backend is running on http://localhost:3001.',
         );
       } finally {
         setIsLoading(false);

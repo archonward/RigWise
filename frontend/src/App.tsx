@@ -1,6 +1,8 @@
 import UpgradePlanner from './components/UpgradePlanner';
 import PartsBrowser from './components/PartsBrowser';
 import AppStatus from './components/AppStatus';
+import ComponentExplainer from './components/ComponentExplainer';
+import GpuNamingGuide from './components/GpuNamingGuide';
 import pcHeroRender from './assets/pc-hero-render.png';
 
 const featureCards = [
@@ -109,12 +111,26 @@ function App() {
                 your current build, your budget, and what you actually want to
                 do with your machine.
               </p>
-              <a
-                href="#upgrade-planner"
-                className="mt-10 inline-flex items-center rounded-md bg-cyan-400 px-5 py-3 text-base font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2 focus:ring-offset-slate-950"
-              >
-                Start Planning
-              </a>
+              <div className="mt-10 flex flex-wrap gap-3">
+                <a
+                  href="#upgrade-planner"
+                  className="inline-flex items-center rounded-md bg-cyan-400 px-5 py-3 text-base font-semibold text-slate-950 transition hover:-translate-y-0.5 hover:bg-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300 focus:ring-offset-2 focus:ring-offset-slate-950"
+                >
+                  Start Planning
+                </a>
+                <a
+                  href="#component-guide"
+                  className="inline-flex items-center rounded-md border border-white/10 bg-slate-900 px-5 py-3 text-base font-semibold text-slate-100 transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"
+                >
+                  Learn PC Parts
+                </a>
+                <a
+                  href="#gpu-naming-guide"
+                  className="inline-flex items-center rounded-md border border-white/10 bg-slate-900 px-5 py-3 text-base font-semibold text-slate-100 transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"
+                >
+                  Decode GPU Names
+                </a>
+              </div>
             </div>
 
             <div className="relative">
@@ -154,6 +170,8 @@ function App() {
         </div>
       </section>
 
+      <ComponentExplainer />
+      <GpuNamingGuide />
       <UpgradePlanner />
       <PartsBrowser />
     </main>

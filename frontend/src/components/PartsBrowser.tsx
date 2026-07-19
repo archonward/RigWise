@@ -24,6 +24,13 @@ const sortOptions = [
 
 type SortOption = (typeof sortOptions)[number]['value'];
 
+interface PartGroup {
+  key: string;
+  title: string;
+  description: string;
+  parts: Part[];
+}
+
 const compareStorageKey = 'rigwise.compareParts';
 const searchStorageKey = 'rigwise.partsSearch';
 const categoryStorageKey = 'rigwise.partsCategory';
@@ -106,6 +113,301 @@ function sortParts(parts: Part[], selectedSort: SortOption) {
   }
 
   return sortedParts;
+}
+
+function getGpuGroup(part: Part) {
+  if (part.performanceScore >= 95) {
+    return {
+      key: 'gpu-flagship',
+      title: 'Flagship 4K GPUs',
+      description: 'Top-end graphics cards for 4K, ray tracing, and heavy creator workloads.',
+    };
+  }
+
+  if (part.performanceScore >= 84) {
+    return {
+      key: 'gpu-high-end',
+      title: 'High-End 1440p and 4K GPUs',
+      description: 'Fast cards for premium 1440p builds and capable 4K gaming.',
+    };
+  }
+
+  if (part.performanceScore >= 68) {
+    return {
+      key: 'gpu-mainstream',
+      title: 'Mainstream 1080p and 1440p GPUs',
+      description: 'Balanced graphics cards for most gaming builds.',
+    };
+  }
+
+  return {
+    key: 'gpu-entry',
+    title: 'Entry 1080p GPUs',
+    description: 'Lower-cost cards for lighter games, esports, and budget upgrades.',
+  };
+}
+
+function getPsuWattage(part: Part) {
+  const wattageMatch = part.name.match(/(\d{3,4})\s*W?/i);
+  return wattageMatch ? Number(wattageMatch[1]) : null;
+}
+
+function getCategoryGroup(part: Part) {
+  return {
+    key: part.category,
+    title: `${part.category}s`,
+    description: `All ${part.category.toLowerCase()} parts matching the current filters.`,
+  };
+}
+
+function getSpecificPartGroup(part: Part) {
+  if (part.category === 'CPU') {
+    const socket = part.socket ?? 'Other';
+    return {
+      key: `cpu-${socket}`,
+      title: `${socket} CPUs`,
+      description:
+        socket === 'AM4'
+          ? 'DDR4 Ryzen upgrade options for older AMD systems.'
+          : socket === 'AM5'
+            ? 'Modern DDR5 Ryzen CPUs with a stronger future upgrade path.'
+            : socket === 'LGA1700'
+              ? 'Intel 12th to 14th gen desktop CPUs.'
+              : socket === 'LGA1851'
+                ? 'Intel Core Ultra desktop CPUs for newer boards.'
+                : 'CPUs grouped by platform compatibility.',
+    };
+  }
+
+  if (part.category === 'GPU') {
+    return getGpuGroup(part);
+  }
+
+  if (part.category === 'RAM') {
+    const memoryType = part.memoryType ?? 'Other';
+    return {
+      key: `ram-${memoryType}`,
+      title: `${memoryType} Memory Kits`,
+      description:
+        memoryType === 'DDR5'
+          ? 'Modern memory for current AMD and Intel platforms.'
+          : memoryType === 'DDR4'
+            ? 'Affordable memory for older or budget-friendly platforms.'
+            : 'Memory grouped by compatibility type.',
+    };
+  }
+
+  if (part.category === 'Motherboard') {
+    const socket = part.socket ?? 'Other';
+    return {
+      key: `motherboard-${socket}`,
+      title: `${socket} Motherboards`,
+      description: 'Boards grouped by CPU socket so compatibility is easier to scan.',
+    };
+  }
+
+  if (part.category === 'PSU') {
+    const wattage = getPsuWattage(part);
+
+    if (wattage !== null && wattage >= 850) {
+      return {
+        key: 'psu-high-end',
+        title: '850W and Higher PSUs',
+        description: 'Power supplies for premium GPUs, flagship builds, or extra upgrade headroom.',
+      };
+    }
+
+    if (wattage !== null && wattage >= 700) {
+      return {
+        key: 'psu-upper',
+        title: '700W to 799W PSUs',
+        description: 'Good fit for upper-midrange single-GPU gaming systems.',
+      };
+    }
+
+    return {
+      key: 'psu-mainstream',
+      title: '550W to 650W PSUs',
+      description: 'Efficient options for entry and mainstream gaming builds.',
+    };
+  }
+
+  if (part.category === 'Storage') {
+    const storageType = part.memoryType ?? 'Other';
+    return {
+      key: `storage-${storageType}`,
+      title: `${storageType} Storage`,
+      description:
+        storageType === 'NVMe'
+          ? 'Fast SSDs for Windows, apps, and active game libraries.'
+          : storageType === 'HDD'
+            ? 'Large lower-cost drives for media, backups, and bulk storage.'
+            : 'Storage grouped by drive type.',
+    };
+  }
+
+  if (part.category === 'Case') {
+    const isCompact = /itx|compact|small form/i.test(`${part.name} ${part.notes}`);
+    return {
+      key: isCompact ? 'case-compact' : 'case-mid-tower',
+      title: isCompact ? 'Compact Cases' : 'Mid-Tower Airflow Cases',
+      description: isCompact
+        ? 'Smaller cases where motherboard size, cooler height, and GPU length matter more.'
+        : 'General-purpose cases with airflow and space for mainstream builds.',
+    };
+  }
+
+  if (part.category === 'Cooler') {
+    const isLiquid = /liquid|aio|h100i/i.test(`${part.name} ${part.notes}`);
+    return {
+      key: isLiquid ? 'cooler-liquid' : 'cooler-air',
+      title: isLiquid ? 'Liquid AIO Coolers' : 'Air Coolers',
+      description: isLiquid
+        ? 'Radiator-based coolers for stronger CPUs and cleaner socket clearance.'
+        : 'Tower air coolers ranging from budget upgrades to premium quiet cooling.',
+    };
+  }
+
+  return getCategoryGroup(part);
+}
+
+function getGroupedParts(parts: Part[], selectedCategory: string) {
+  const groups = new Map<string, PartGroup>();
+
+  parts.forEach((part) => {
+    const groupInfo =
+      selectedCategory === 'All' ? getCategoryGroup(part) : getSpecificPartGroup(part);
+    const existingGroup = groups.get(groupInfo.key);
+
+    if (existingGroup) {
+      existingGroup.parts.push(part);
+      return;
+    }
+
+    groups.set(groupInfo.key, {
+      ...groupInfo,
+      parts: [part],
+    });
+  });
+
+  return Array.from(groups.values());
+}
+
+function getAveragePrice(parts: Part[]) {
+  if (parts.length === 0) {
+    return 0;
+  }
+
+  const totalPrice = parts.reduce((sum, part) => sum + part.price, 0);
+  return Math.round(totalPrice / parts.length);
+}
+
+function PartCard({
+  part,
+  isSelectedForCompare,
+  onToggleCompare,
+}: {
+  part: Part;
+  isSelectedForCompare: boolean;
+  onToggleCompare: (part: Part) => void;
+}) {
+  const badges = getValueBadges(part);
+
+  return (
+    <article className="rounded-lg border border-white/10 bg-slate-950 p-6 shadow-lg shadow-slate-950/20 transition hover:-translate-y-1 hover:border-cyan-300/40 hover:shadow-cyan-950/30">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-sm font-medium text-cyan-300">
+            {part.brand}
+          </p>
+          <h3 className="mt-2 text-xl font-semibold text-white">
+            {part.name}
+          </h3>
+        </div>
+        <span className="rounded-full border border-white/10 bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
+          {part.category}
+        </span>
+      </div>
+
+      {badges.length > 0 ? (
+        <div className="mt-4 flex flex-wrap gap-2">
+          {badges.map((badge) => (
+            <span
+              key={badge}
+              className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-100"
+            >
+              {badge}
+            </span>
+          ))}
+        </div>
+      ) : null}
+
+      <div className="mt-6 grid grid-cols-2 gap-3 text-sm text-slate-300">
+        <div className="rounded-md bg-slate-900 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Price
+          </p>
+          <p className="mt-1 text-lg font-semibold text-white">
+            ${part.price}
+          </p>
+        </div>
+        <div className="rounded-md bg-slate-900 p-3">
+          <p className="text-xs uppercase tracking-wide text-slate-500">
+            Performance
+          </p>
+          <p className="mt-1 text-lg font-semibold text-white">
+            {part.performanceScore}
+          </p>
+        </div>
+      </div>
+
+      <dl className="mt-6 space-y-3 text-sm text-slate-300">
+        {part.powerDraw !== null ? (
+          <div className="flex justify-between gap-4 border-t border-white/5 pt-3">
+            <dt className="text-slate-400">Power draw</dt>
+            <dd className="text-right text-slate-100">
+              {part.powerDraw}W
+            </dd>
+          </div>
+        ) : null}
+
+        {part.socket ? (
+          <div className="flex justify-between gap-4 border-t border-white/5 pt-3">
+            <dt className="text-slate-400">Socket</dt>
+            <dd className="text-right text-slate-100">{part.socket}</dd>
+          </div>
+        ) : null}
+
+        {part.memoryType ? (
+          <div className="flex justify-between gap-4 border-t border-white/5 pt-3">
+            <dt className="text-slate-400">Memory type</dt>
+            <dd className="text-right text-slate-100">
+              {part.memoryType}
+            </dd>
+          </div>
+        ) : null}
+
+        {part.notes ? (
+          <div className="border-t border-white/5 pt-3">
+            <dt className="text-slate-400">Notes</dt>
+            <dd className="mt-1 text-slate-100">{part.notes}</dd>
+          </div>
+        ) : null}
+      </dl>
+
+      <button
+        type="button"
+        onClick={() => onToggleCompare(part)}
+        className={`mt-6 w-full rounded-md px-4 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-cyan-300/20 ${
+          isSelectedForCompare
+            ? 'border border-cyan-300/40 bg-cyan-300/10 text-cyan-100 hover:bg-cyan-300/20'
+            : 'border border-white/10 bg-slate-900 text-slate-100 hover:border-cyan-300/40 hover:bg-slate-800'
+        }`}
+      >
+        {isSelectedForCompare ? 'Remove from Compare' : 'Add to Compare'}
+      </button>
+    </article>
+  );
 }
 
 function PartsBrowser() {
@@ -228,6 +530,7 @@ function PartsBrowser() {
   }
 
   const sortedParts = sortParts(parts, selectedSort);
+  const groupedParts = getGroupedParts(sortedParts, selectedCategory);
 
   return (
     <section
@@ -341,114 +644,64 @@ function PartsBrowser() {
           ) : null}
 
           {!isLoading && !errorMessage && parts.length > 0 ? (
-            <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-              {sortedParts.map((part) => {
-                const isSelectedForCompare = selectedCompareParts.some(
-                  (selectedPart) => selectedPart.id === part.id,
-                );
-                const badges = getValueBadges(part);
-
-                return (
-                <article
-                  key={part.id}
-                  className="rounded-lg border border-white/10 bg-slate-950 p-6 shadow-lg shadow-slate-950/20 transition hover:-translate-y-1 hover:border-cyan-300/40 hover:shadow-cyan-950/30"
+            <div className="space-y-8">
+              {groupedParts.map((group) => (
+                <section
+                  key={group.key}
+                  aria-labelledby={`parts-group-${group.key}`}
+                  className="rounded-lg border border-white/10 bg-slate-950/60 p-5"
                 >
-                  <div className="flex items-start justify-between gap-3">
-                    <div>
-                      <p className="text-sm font-medium text-cyan-300">
-                        {part.brand}
-                      </p>
-                      <h3 className="mt-2 text-xl font-semibold text-white">
-                        {part.name}
+                  <div className="flex flex-wrap items-start justify-between gap-4">
+                    <div className="max-w-2xl">
+                      <h3
+                        id={`parts-group-${group.key}`}
+                        className="text-2xl font-semibold text-white"
+                      >
+                        {group.title}
                       </h3>
+                      <p className="mt-2 text-sm leading-6 text-slate-300">
+                        {group.description}
+                      </p>
                     </div>
-                    <span className="rounded-full border border-white/10 bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-300">
-                      {part.category}
-                    </span>
-                  </div>
 
-                  {badges.length > 0 ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {badges.map((badge) => (
-                        <span
-                          key={badge}
-                          className="rounded-full border border-cyan-300/20 bg-cyan-300/10 px-3 py-1 text-xs font-semibold text-cyan-100"
-                        >
-                          {badge}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-
-                  <div className="mt-6 grid grid-cols-2 gap-3 text-sm text-slate-300">
-                    <div className="rounded-md bg-slate-900 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">
-                        Price
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-white">
-                        ${part.price}
-                      </p>
-                    </div>
-                    <div className="rounded-md bg-slate-900 p-3">
-                      <p className="text-xs uppercase tracking-wide text-slate-500">
-                        Performance
-                      </p>
-                      <p className="mt-1 text-lg font-semibold text-white">
-                        {part.performanceScore}
-                      </p>
+                    <div className="grid grid-cols-2 gap-3 text-sm sm:min-w-[220px]">
+                      <div className="rounded-md border border-white/10 bg-slate-900 px-3 py-2">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Parts
+                        </p>
+                        <p className="mt-1 font-semibold text-white">
+                          {group.parts.length}
+                        </p>
+                      </div>
+                      <div className="rounded-md border border-white/10 bg-slate-900 px-3 py-2">
+                        <p className="text-xs uppercase tracking-wide text-slate-500">
+                          Avg price
+                        </p>
+                        <p className="mt-1 font-semibold text-white">
+                          ${getAveragePrice(group.parts)}
+                        </p>
+                      </div>
                     </div>
                   </div>
 
-                  <dl className="mt-6 space-y-3 text-sm text-slate-300">
-                    {part.powerDraw !== null ? (
-                      <div className="flex justify-between gap-4 border-t border-white/5 pt-3">
-                        <dt className="text-slate-400">Power draw</dt>
-                        <dd className="text-right text-slate-100">
-                          {part.powerDraw}W
-                        </dd>
-                      </div>
-                    ) : null}
+                  <div className="mt-5 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                    {group.parts.map((part) => {
+                      const isSelectedForCompare = selectedCompareParts.some(
+                        (selectedPart) => selectedPart.id === part.id,
+                      );
 
-                    {part.socket ? (
-                      <div className="flex justify-between gap-4 border-t border-white/5 pt-3">
-                        <dt className="text-slate-400">Socket</dt>
-                        <dd className="text-right text-slate-100">{part.socket}</dd>
-                      </div>
-                    ) : null}
-
-                    {part.memoryType ? (
-                      <div className="flex justify-between gap-4 border-t border-white/5 pt-3">
-                        <dt className="text-slate-400">Memory type</dt>
-                        <dd className="text-right text-slate-100">
-                          {part.memoryType}
-                        </dd>
-                      </div>
-                    ) : null}
-
-                    {part.notes ? (
-                      <div className="border-t border-white/5 pt-3">
-                        <dt className="text-slate-400">Notes</dt>
-                        <dd className="mt-1 text-slate-100">{part.notes}</dd>
-                      </div>
-                    ) : null}
-                  </dl>
-
-                  <button
-                    type="button"
-                    onClick={() => toggleComparePart(part)}
-                    className={`mt-6 w-full rounded-md px-4 py-3 text-sm font-semibold transition focus:outline-none focus:ring-2 focus:ring-cyan-300/20 ${
-                      isSelectedForCompare
-                        ? 'border border-cyan-300/40 bg-cyan-300/10 text-cyan-100 hover:bg-cyan-300/20'
-                        : 'border border-white/10 bg-slate-900 text-slate-100 hover:border-cyan-300/40 hover:bg-slate-800'
-                    }`}
-                  >
-                    {isSelectedForCompare
-                      ? 'Remove from Compare'
-                      : 'Add to Compare'}
-                  </button>
-                </article>
-                );
-              })}
+                      return (
+                        <PartCard
+                          key={part.id}
+                          part={part}
+                          isSelectedForCompare={isSelectedForCompare}
+                          onToggleCompare={toggleComparePart}
+                        />
+                      );
+                    })}
+                  </div>
+                </section>
+              ))}
             </div>
           ) : null}
         </div>

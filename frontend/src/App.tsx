@@ -3,6 +3,7 @@ import PartsBrowser from './components/PartsBrowser';
 import AppStatus from './components/AppStatus';
 import ComponentExplainer from './components/ComponentExplainer';
 import GpuNamingGuide from './components/GpuNamingGuide';
+import GpuBenchmarks from './components/GpuBenchmarks';
 import pcHeroRender from './assets/pc-hero-render.png';
 
 const featureCards = [
@@ -87,6 +88,10 @@ function FeatureIcon({ type }: { type: FeatureGraphic }) {
 }
 
 function App() {
+  if (window.location.pathname === '/gpu-benchmarks') {
+    return <GpuBenchmarks />;
+  }
+
   return (
     <main className="min-h-screen bg-slate-950 text-slate-100">
       <section className="border-b border-white/10">
@@ -129,6 +134,12 @@ function App() {
                   className="inline-flex items-center rounded-md border border-white/10 bg-slate-900 px-5 py-3 text-base font-semibold text-slate-100 transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"
                 >
                   Decode GPU Names
+                </a>
+                <a
+                  href="/gpu-benchmarks"
+                  className="inline-flex items-center rounded-md border border-white/10 bg-slate-900 px-5 py-3 text-base font-semibold text-slate-100 transition hover:-translate-y-0.5 hover:border-cyan-300/40 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-300/20"
+                >
+                  GPU Benchmarks
                 </a>
               </div>
             </div>
